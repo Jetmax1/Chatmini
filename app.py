@@ -1,3 +1,5 @@
+import eventlet
+eventlet.monkey_patch()
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user, UserMixin
@@ -9,7 +11,9 @@ import os
 app = Flask(__name__)
 app.config ["SECRET_KEY"] = os.environ.get('SECRET_KEY', 'dev-change-me')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chat.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": {"check_same_thread": False}
+}
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -112,6 +116,5 @@ def handle_send_message(data):
          {"user": current_user.username, "msg": text},
          to="global")
 if __name__ == "__main__":
-    import eventlet
     import eventlet.wsgi
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
